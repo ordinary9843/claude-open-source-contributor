@@ -1,0 +1,23 @@
+{
+  "name": "open-source-contributor",
+  "description": "Finds unaddressed GitHub issues in active repositories, reproduces and fixes bugs with full test coverage, and submits clean pull requests — all with a traceable contribution log.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jerry Chen",
+    "email": "ordinary9843@gmail.com"
+  },
+  "homepage": "https://github.com/ordinary9843/claude-open-source-contributor",
+  "repository": "https://github.com/ordinary9843/claude-open-source-contributor",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "open-source",
+    "contribution",
+    "github",
+    "bug-fix",
+    "pull-request",
+    "developer-tools",
+    "productivity"
+  ]
+}
