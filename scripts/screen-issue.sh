@@ -118,6 +118,22 @@ if (( open_pr > 0 )); then
     echo "=== SCREEN DISQUALIFIED: there is an open PR addressing this issue ===" ; exit 2
 fi
 
+# --- Layer 3b: Broader open PR check — catches "Fix #N" titles without closing keywords ---
+title_pr_out=$(${CLAUDE_PLUGIN_ROOT}/scripts/gh-call.sh \
+    gh pr list --repo "$REPO_FULL" --state open \
+    --search "#$NUMBER in:title" \
+    --json number) || {
+    gh_exit=$?
+    if [[ $gh_exit -eq 1 ]]; then
+        echo "=== SCREEN ERROR: fatal — gh not available ===" ; exit 1
+    fi
+    echo "=== SCREEN ERROR: could not check title-referenced PRs for issue $NUMBER ===" ; exit 2
+}
+title_open_pr=$(echo "$title_pr_out" | jq 'length')
+if (( title_open_pr > 0 )); then
+    echo "=== SCREEN DISQUALIFIED: there is an open PR referencing this issue in its title ===" ; exit 2
+fi
+
 # --- Layer 4: Linked PR check (merged) ---
 merged_pr_out=$(${CLAUDE_PLUGIN_ROOT}/scripts/gh-call.sh \
     gh pr list --repo "$REPO_FULL" --state merged \

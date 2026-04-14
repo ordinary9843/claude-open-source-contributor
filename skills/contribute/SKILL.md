@@ -148,6 +148,22 @@ git push fork fix/<slug>
 
 If `git push` fails (e.g. protected branch, remote rejection): do not force-push. Stop and report the error — the user must resolve remote state before retrying.
 
+### Step 6.5: Check for PR Template
+
+```bash
+cat .github/PULL_REQUEST_TEMPLATE.md 2>/dev/null || \
+  cat .github/pull_request_template.md 2>/dev/null || \
+  ls .github/PULL_REQUEST_TEMPLATE/*.md 2>/dev/null | head -1 | xargs cat 2>/dev/null || \
+  echo "(no PR template found)"
+```
+
+If a template exists:
+- Fill in every required section — do not delete or skip sections
+- Required fields (e.g., "Test Plan", "Checklist", "How to test") must have real content
+- Optional sections may be removed only if genuinely not applicable
+
+If no template exists, use the default body format defined in Step 7.
+
 ### Step 7: Open PR
 
 ```bash
@@ -210,6 +226,14 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/log.sh append '{
 PR opened: <PR URL>
 Log updated: ~/.claude/open-source-contributor/log.json
 ```
+
+Monitor CI status after the PR is open:
+
+```bash
+gh pr checks <PR-URL> --watch
+```
+
+If CI fails, investigate and push a fix before the maintainer has to ask. A PR with a failing CI is likely to be ignored.
 
 ## Red Flags — Stop
 

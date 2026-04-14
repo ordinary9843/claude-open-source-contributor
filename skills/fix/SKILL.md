@@ -98,6 +98,32 @@ Do not proceed without an explicit choice. Do not overwrite silently.
 
 If option 2 is chosen, verify with `git remote get-url origin` (must point to the expected upstream) and `git status` (must show clean tree) before continuing.
 
+### Step 4.5: Read CONTRIBUTING.md and Set Up Dev Environment
+
+```bash
+cat CONTRIBUTING.md 2>/dev/null || cat .github/CONTRIBUTING.md 2>/dev/null || echo "(no CONTRIBUTING.md found)"
+```
+
+Record:
+- **Test command** — many projects define a non-standard command (e.g., `pytest mypy/test/`, `python -m pytest -x`, `make test`)
+- **Lint/format command** — (e.g., `ruff check .`, `flake8`, `make lint`)
+- **CLA/DCO requirement** — if present, stop and report to the user before any git work; the user must sign before a PR can be accepted
+- **Dev install instructions** — follow them exactly
+
+Install in editable mode so the test suite runs **your modified code**, not the installed release:
+
+```bash
+pip install -e ".[dev]" 2>/dev/null || pip install -e .
+```
+
+Verify the right version is loaded:
+
+```bash
+python -c "import <package>; print(<package>.__file__)"
+```
+
+The path must be inside `~/Workspaces/<repo-name>/`. If it points to a site-packages directory, the tests are running against the unmodified installed version — fix the environment before continuing.
+
 ### Step 5: Create Fix Branch
 
 ```bash
