@@ -67,7 +67,7 @@ Wait for the user's reply. If the reply is non-empty and non-whitespace, treat i
 
 ### Step 2: Layer 1 — Search Issues Directly
 
-If `$ARGUMENTS` specifies a language (e.g. `"Python repos"`), add `--language <lang>` to the Layer 1 search. If `$ARGUMENTS` specifies a single repository (e.g. `"vuejs/vue"`), use `gh issue list --repo <owner/name>` instead of `gh search issues`. If `$ARGUMENTS` is empty, run the default broad search.
+If `$ARGUMENTS` specifies a language or ecosystem (e.g. `"python"`), embed it as `language:<lang>` inside the query string — **do not use the `--language` flag**, it interacts poorly with other filters and frequently returns empty results. If `$ARGUMENTS` specifies a single repository (e.g. `"vuejs/vue"`), use `gh issue list --repo <owner/name>` instead of `gh search issues`. If `$ARGUMENTS` is empty, run the default broad search.
 
 Search GitHub's issue index across all public repos with quality signals baked in:
 
@@ -76,23 +76,39 @@ gh search issues \
   --state open \
   --label bug \
   --no-assignee \
-  --archived false \
   --sort updated \
   --order desc \
   --limit 30 \
-  --search "stars:>5000 fork:false" \
-  --json url,title,repository,comments,createdAt,updatedAt
+  --json url,title,repository,commentsCount,createdAt,updatedAt
 ```
 
-> **Rate limit design:** `--limit 30` (reduced from 100) combined with server-side filtering (`stars:>5000 fork:false --archived false`) significantly reduces the initial candidate pool, lowering the number of subsequent `screen-issue.sh` API calls.
+> **Rate limit design:** `--limit 30` combined with server-side filtering significantly reduces the initial candidate pool, lowering the number of subsequent `screen-issue.sh` API calls.
 
-If the user specified a language, add `--language <lang>`. If they specified a repo, use `gh issue list` for that repo instead:
+If the user specified a language, embed it in the query string — not as a flag:
 
 ```bash
-gh issue list --repo <owner/name> --state open --label bug --no-assignee --limit 50
+gh search issues \
+  "stars:>5000 fork:false language:python" \
+  --state open \
+  --label bug \
+  --no-assignee \
+  --sort updated \
+  --order desc \
+  --limit 30 \
+  --json url,title,repository,commentsCount,createdAt,updatedAt
+```
+
+If they specified a repo, use `gh issue list` for that repo instead:
+
+```bash
+gh issue list --repo <owner/name> --state open --label bug --limit 50
 ```
 
 If a repo does not use a `bug` label, fall back to all open issues without `--label`.
+
+> **Note:** `gh issue list` does not support `--no-assignee`. Post-filter assigned issues via `screen-issue.sh` (it checks assignees via the API).
+
+**If the Layer 1 results are dominated by small or personal repos** (most repos have < 5,000 stars and will be disqualified by `screen-issue.sh`), switch to targeted searches on known well-maintained repos for the given ecosystem. For Python, use `gh issue list` on repos such as `psf/requests`, `pallets/flask`, `pandas-dev/pandas`, `scikit-learn/scikit-learn`, `python/mypy`, `encode/httpx`, and similar. Run each in sequence until you have at least 30 raw candidates total.
 
 Collect the raw list. Do not evaluate titles yet — that comes after filtering.
 
@@ -140,7 +156,9 @@ gh issue view <issue-url> --comments
 | Maintainer closed the issue as invalid or by design | Skip |
 | Any contributor has claimed they are actively working on it | Skip |
 | A linked PR attempted this fix and was rejected | Skip |
+| A comment (even informal) says a PR has been opened — verify the PR exists before proceeding | Skip if PR is open |
 | Comments suggest the bug is fixed in a newer unreleased version | Skip |
+| Issue was bisected to a specific commit or PR — check whether follow-up commits after that point already addressed it | Skip if silently fixed |
 | Ongoing maintainer disagreement about whether this is a bug | Skip |
 | Issue is a feature request, not a bug | Skip |
 | Issue is documentation-only | Skip |

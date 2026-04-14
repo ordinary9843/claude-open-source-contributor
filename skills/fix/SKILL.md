@@ -122,19 +122,34 @@ Example: `fix/return-behavior-override`, `fix/header-property-corruption`
 **Root cause is established when** you can complete this sentence:
 > "The bug occurs because [specific code/logic] [does wrong thing] when [condition]."
 
-Do not proceed to Step 7 until you can state this clearly.
+Do not proceed to Step 6.5 until you can state this clearly.
+
+### Step 6.5: Define Fix Approach and Edge Cases
+
+Before writing any test or fix code, state:
+
+1. **Proposed fix in one sentence** — what exactly will change and where
+2. **Edge cases** — list input variations the fix must handle correctly:
+   - What should still work after the fix (do not break adjacent behavior)
+   - Boundary values, empty inputs, type variations, operator variants
+   - Cases where the fix is deliberately conservative (and why that is acceptable)
+3. **Confirm with user** if the approach has meaningful trade-offs or uncertainty
+
+Do not proceed to Step 7 until the fix direction is clear and edge cases are enumerated.
 
 ### Step 7: Write Failing Test
 
 *(Applies `superpowers:test-driven-development` behavior)*
 
-**Before writing anything, read the existing test files for the affected module.** Understand:
-- The test framework and assertion library in use (`assert.strictEqual`, `expect().toBe()`, `t.is()`, etc.)
-- The describe/it structure and naming conventions (`should ...`, `throws when ...`, etc.)
+**Before writing anything, understand the project's test infrastructure:**
+- The test framework and assertion library in use
+- The describe/it structure and naming conventions
 - How existing tests are organized — by method, by scenario, or by input type
-- Any test helpers or fixtures already defined
+- Any test helpers, fixtures, or project-specific annotation formats (e.g., inline `# N:` / `# E:` markers, `.pyi` fixture files, snapshot formats)
 
-Your new test must be indistinguishable in style from the tests already in that file.
+Spend time reading existing tests in the affected module. Your new test must be indistinguishable in style from the tests already in that file.
+
+**Additionally, verify your test covers the edge cases identified in Step 6.5.** Each edge case should have its own assertion or sub-case. Do not bundle unrelated behaviors into a single test.
 
 **Writing the test:**
 1. Write the test that demonstrates the bug

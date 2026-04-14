@@ -65,7 +65,9 @@ git config user.name "Your Name"
 git config user.email "you@example.com"
 ```
 
-Do not proceed without both values confirmed.
+**Ask the user to confirm both values are correct** — not just non-empty. The configured email must match the account they intend to contribute from. If they correct either value, re-run the check before proceeding.
+
+Do not proceed without both values explicitly confirmed by the user.
 
 ### Step 3: Confirm with User
 
@@ -95,14 +97,20 @@ git branch --show-current
 
 If the output is not `fix/<slug>`, stop and check out the correct branch before proceeding. Never commit to the default branch.
 
-Identify files changed on the fix branch:
+Detect the upstream default branch and identify files changed on the fix branch:
 
 ```bash
-git diff --name-only main...fix/<slug>
-# or: git diff --name-only master...fix/<slug>
+default_branch=$(git remote show origin | grep 'HEAD branch' | awk '{print $NF}')
+git diff --name-only ${default_branch}...fix/<slug>
 ```
 
-Stage only those files:
+If the above returns empty (e.g. local branch not yet tracking remote), fall back to:
+
+```bash
+git status --short
+```
+
+Stage only the files that are part of the fix:
 
 ```bash
 git add <file1> <file2> ...
@@ -110,8 +118,9 @@ git commit -m "<message>"
 ```
 
 **Commit message rules:**
-- Single line only
-- Concise and scoped: `fix: <description>` (e.g., `fix: return value overridden by prior setter with higher invoke priority`)
+- Subject line only by default (≤ 72 characters): `fix: <description>`
+- No body unless the fix has multiple distinct logical parts that cannot be described in one line
+- If a body is needed, keep it to 3 lines maximum — explain *what* changed and *why*, not *how*
 - No `Co-Authored-By` trailer
 - No mention of Claude, AI, or any tool
 
